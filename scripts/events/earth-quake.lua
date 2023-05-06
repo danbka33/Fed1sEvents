@@ -201,13 +201,17 @@ function EarthQuake.on_nth_tick_30(event)
                 cliff = EarthQuake.cliffSettings[earthQuake.currentCliff]["stopCliff"]
             end
 
+            local cliffPosition = { earthQuake.currentPositionX, earthQuake.currentPositionY }
+
             --game.print("[gps=" .. currentPositionX .. "," .. currentPositionY .. "] " .. cliff .. " " .. randomCliff["direction"] .. " " .. currentLength .. "/" .. cliffLength);
             --game.players[1].open_map({x=earthQuake.currentPositionX,y=earthQuake.currentPositionX},16)
             local cliffEntity = surface.create_entity {
                 name = "cliff",
-                position = { earthQuake.currentPositionX, earthQuake.currentPositionY },
+                position = cliffPosition,
                 cliff_orientation = cliff
             }
+
+            Util.conditional_mark_for_deconstruction({ cliffEntity }, surface, cliffPosition)
 
             -- Damage all entities in 5x5 area around new cliff
             for _, entity in pairs(surface.find_entities({ { cliffEntity.position.x - 2.5, cliffEntity.position.y - 2.5 }, { cliffEntity.position.x + 2.5, cliffEntity.position.y + 2.5 } })) do
