@@ -74,26 +74,52 @@ local cliffSettings = {
 }
 
 local function earthQuakeEvent()
+    local cliffLength = math.random(20, 80)
+    --вектор землетрясения
+    local cliffX = math.random(cliffLength * 2) - cliffLength
+    local cliffY = math.random(math.abs(cliffLength - cliffX) * 2) - math.abs((cliffLength - cliffX))
+    --расчёт распределения движения скал
+    local fluct = cliffLength / 4
+    local bookNorth = fluct
+    local bookSouth = fluct
+    local bookEast = fluct
+    local bookWest = fluct
+    if cliffY > 0 then
+        bookNorth = math.abs(cliffY) + fluct
+    else
+        bookSouth = math.abs(cliffY) + fluct
+    end
+    if cliffX > 0 then
+        bookEast = math.abs(cliffX) + fluct
+    else
+        bookWest = math.abs(cliffX) + fluct
+    end
+    --землетрясение происходит в направлении вектора от игрока
 
     local earthQuake = {
         currentCliff = "none",
-        cliffLength = math.random(6, 80),
+        cliffLength = cliffLength, --math.random(6, 80),
         currentLength = 1,
-        currentPositionX = -2,
-        currentPositionY = -1.5,
+        currentPositionX = 0 + (bookEast - bookWest) / 2 + game.player.position.x,
+        currentPositionY = 0 + (bookSouth - bookNorth) / 2 + game.player.position.y,
         bannedDirections = {
             ["west"] = 0,
             ["east"] = 0,
             ["north"] = 0,
             ["south"] = 0,
-        }
+        },
+        bookedDirections = {
+            ["west"] = bookWest,
+            ["east"] = bookEast,
+            ["north"] = bookNorth,
+            ["south"] = bookSouth,
+        },
+        skipTick = math.floor(2 * 80 / cliffLength + 0.5)
     }
-
-
 
     table.insert(global.earthQuakes, earthQuake)
 
-    game.print("Эпицентр землетрясения [gps=-2,-1.5].")
+    game.print(game.tick .. "Эпицентр землетрясения [" .. earthQuake.currentPositionX .. "],[" .. earthQuake.currentPositionY .. "] ")
 
 end
 
@@ -107,66 +133,79 @@ local function OnTick(event)
     local surface = game.surfaces[1]
 
     for earthQuakeIndex, earthQuake in pairs(global.earthQuakes) do
-        --game.print(earthQuakeIndex .. " " .. earthQuake.currentLength)
-        local cliffLength = earthQuake.cliffLength
+        if (tick % earthQuake.skipTick == 0) then
+            local cliffLength = earthQuake.cliffLength
 
-        local filteredPossibleCliffs = {};
-        local filteredPossibleCliffsCount = 0;
-        for _, possibleCliff in pairs(cliffSettings[earthQuake.currentCliff]["possibleCliffs"]) do
-            if (earthQuake.bannedDirections[possibleCliff["direction"]] <= 0 or earthQuake.currentCliff == possibleCliff.direction) then
-                table.insert(filteredPossibleCliffs, possibleCliff)
-                filteredPossibleCliffsCount = filteredPossibleCliffsCount + 1
-            end
-        end
-
-        local randomCliffIndex = math.random(1, filteredPossibleCliffsCount)
-
-        local direction = cliffSettings[earthQuake.currentCliff]["possibleDirection"]
-        local randomCliff = filteredPossibleCliffs[randomCliffIndex]
-
-        earthQuake.currentPositionX = earthQuake.currentPositionX + direction.x
-        earthQuake.currentPositionY = earthQuake.currentPositionY + direction.y
-
-        local cliff = randomCliff["cliff"]
-
-        if (earthQuake.currentLength == cliffLength) then
-            cliff = cliffSettings[earthQuake.currentCliff]["stopCliff"]
-        end
-
-        --game.print("[gps=" .. currentPositionX .. "," .. currentPositionY .. "] " .. cliff .. " " .. randomCliff["direction"] .. " " .. currentLength .. "/" .. cliffLength);
-
-        local cliffEntity = surface.create_entity {
-            name = "cliff",
-            position = { earthQuake.currentPositionX, earthQuake.currentPositionY },
-            cliff_orientation = cliff
-        }
-
-        for _, entity in pairs(surface.find_entities({ { cliffEntity.position.x - 2.5, cliffEntity.position.y - 2.5 }, { cliffEntity.position.x + 2.5, cliffEntity.position.y + 2.5 } })) do
-            if (entity.valid and entity.is_entity_with_health) then
-                entity.damage(1000, "neutral", "physical", cliffEntity)
-            end
-        end
-
-        earthQuake.currentCliff = randomCliff["oppositeDirection"]
-
-        earthQuake.currentLength = earthQuake.currentLength + 1;
-
-        for bannedDirection, stepCount in pairs(earthQuake.bannedDirections) do
-            if (bannedDirection == earthQuake.currentCliff) then
-                earthQuake.bannedDirections[bannedDirection] = 3;
-            else
-                if (stepCount > 0) then
-                    earthQuake.bannedDirections[bannedDirection] = earthQuake.bannedDirections[bannedDirection] - 1;
+            local filteredPossibleCliffs = {};
+            local filteredPossibleCliffsCount = 0;
+            local filteredPossibleRange = {};
+            local filteredPossibleDir = {};
+            local filteredPossibleCliffsRandomLevel = 0;
+            for _, possibleCliff in pairs(cliffSettings[earthQuake.currentCliff]["possibleCliffs"]) do
+                if (earthQuake.bannedDirections[possibleCliff["direction"]] <= 0 or earthQuake.currentCliff == possibleCliff.direction) then
+                    table.insert(filteredPossibleCliffs, possibleCliff)
+                    filteredPossibleCliffsCount = filteredPossibleCliffsCount + 1
+                    table.insert(filteredPossibleRange, { range = earthQuake.bookedDirections[possibleCliff.direction], direction = possibleCliff.direction })
+                    filteredPossibleCliffsRandomLevel = filteredPossibleCliffsRandomLevel + earthQuake.bookedDirections[possibleCliff.direction]
                 end
             end
-        end
+            local randomCliffRange = math.random(1, filteredPossibleCliffsRandomLevel)
 
-        if(earthQuake.currentLength > cliffLength) then
-            game.print("Землетрясение закончилось.")
-            global.earthQuakes[earthQuakeIndex] = nil
-        end
+            local randomCliffIndex = -1
+            local randomRange = 0
+            for cliffIndex, range in pairs(filteredPossibleRange) do
+                randomRange = randomRange + range.range
+                if (randomRange >= randomCliffRange and randomCliffIndex == -1) then
+                    randomCliffIndex = cliffIndex
+                end
+            end
+            local direction = cliffSettings[earthQuake.currentCliff]["possibleDirection"]
+            local randomCliff = filteredPossibleCliffs[randomCliffIndex]
 
-        :: continue ::
+            earthQuake.currentPositionX = earthQuake.currentPositionX + direction.x
+            earthQuake.currentPositionY = earthQuake.currentPositionY + direction.y
+
+            local cliff = randomCliff["cliff"]
+
+            if (earthQuake.currentLength == cliffLength) then
+                cliff = cliffSettings[earthQuake.currentCliff]["stopCliff"]
+            end
+
+            --game.print("[gps=" .. currentPositionX .. "," .. currentPositionY .. "] " .. cliff .. " " .. randomCliff["direction"] .. " " .. currentLength .. "/" .. cliffLength);
+            --game.players[1].open_map({x=earthQuake.currentPositionX,y=earthQuake.currentPositionX},16)
+            local cliffEntity = surface.create_entity {
+                name = "cliff",
+                position = { earthQuake.currentPositionX, earthQuake.currentPositionY },
+                cliff_orientation = cliff
+            }
+
+            for _, entity in pairs(surface.find_entities({ { cliffEntity.position.x - 2.5, cliffEntity.position.y - 2.5 }, { cliffEntity.position.x + 2.5, cliffEntity.position.y + 2.5 } })) do
+                if (entity.valid and entity.is_entity_with_health) then
+                    entity.damage(1000, "neutral", "physical", cliffEntity)
+                end
+            end
+
+            earthQuake.currentCliff = randomCliff["oppositeDirection"]
+
+            earthQuake.currentLength = earthQuake.currentLength + 1;
+
+            for bannedDirection, stepCount in pairs(earthQuake.bannedDirections) do
+                if (bannedDirection == earthQuake.currentCliff) then
+                    earthQuake.bannedDirections[bannedDirection] = 3;
+                else
+                    if (stepCount > 0) then
+                        earthQuake.bannedDirections[bannedDirection] = earthQuake.bannedDirections[bannedDirection] - 1;
+                    end
+                end
+            end
+
+            if (earthQuake.currentLength > cliffLength) then
+                game.print(game.tick .. " Землетрясение закончилось. " .. earthQuake.currentLength .. " skipTick=" .. earthQuake.skipTick)
+                global.earthQuakes[earthQuakeIndex] = nil
+            end
+
+            :: continue ::
+        end
     end
 
 
@@ -182,4 +221,4 @@ script.on_init(function()
     initialize()
 end)
 
-script.on_nth_tick(5, OnTick)
+script.on_nth_tick(1, OnTick)
