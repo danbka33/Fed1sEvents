@@ -6,4 +6,5 @@
 
 require("prototypes.damage-types")
 require("prototypes.sound")
+require("prototypes.entity.explosion")
 require("prototypes.entity.meteor")

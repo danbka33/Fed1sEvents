@@ -39,7 +39,6 @@ function Meteor.choose_shower_position(surface_index)
     return position
 end
 
-
 ---Spawns the actual meteor and shadow sprites.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
 function Meteor.spawn_meteor_shower(meteor_shower)
@@ -60,15 +59,15 @@ function Meteor.spawn_meteor_shower(meteor_shower)
 
                 game.print("Meteor shower spawned at [gps=" .. meteor.land_position.x .. ", " .. meteor.land_position.y .. "]")
 
-                surface.create_entity{
+                surface.create_entity {
                     name = "fed1s-falling-meteor-" .. variant,
                     position = meteor_shower.start_position,
                     target = meteor.land_position,
                     force = "neutral",
                     speed = Util.vectors_delta_length(meteor_shower.start_position, meteor.land_position) / (Meteor.meteor_fall_time + Meteor.meteor_chain_delay * meteor.id)
                 }
-                surface.create_entity{
-                    name =  "fed1s-shadow-meteor-" .. variant,
+                surface.create_entity {
+                    name = "fed1s-shadow-meteor-" .. variant,
                     position = meteor_shower.shadow_start_position,
                     target = meteor.land_position,
                     force = "neutral",
@@ -80,6 +79,36 @@ function Meteor.spawn_meteor_shower(meteor_shower)
 
 end
 
+---Handles cargo rocket fragments and meteors being spawned, as well as the creation of biter
+---spawners on vitamelange worlds.
+---@param event on_trigger_created_entity Event data
+function on_trigger_created_entity(event)
+    if not event.entity.valid then
+        return
+    end
+
+    local entity_name = event.entity.name
+    local meteor_name = string.match(entity_name, "meteor[-]%d%d")
+
+    local surface = event.entity.surface
+    local position = event.entity.position
+    local tile = surface.get_tile(position)
+
+    if meteor_name then
+        if not tile.collides_with("player-layer") then
+            -- Create an explosion
+            surface.create_entity { name = "fed1s-" .. "meteor-explosion", position = position }
+
+            -- Decide whether to spawn biter meteors or meteor fragments
+            local meteor_remnant = surface.create_entity {
+                name = "fed1s-" .. "static-" .. meteor_name, position = position, force = "neutral" }
+            Util.conditional_mark_for_deconstruction({ meteor_remnant }, surface, position)
+
+        end
+    end
+end
+Event.addListener(defines.events.on_trigger_created_entity, on_trigger_created_entity)
+
 ---Processes a given meteor shower, triggering defenses if appropriate.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
 function Meteor.tick_meteor_shower(meteor_shower)
@@ -88,15 +117,9 @@ function Meteor.tick_meteor_shower(meteor_shower)
         return
     end
 
-    if meteor_shower.skip and meteor_shower.skip > 0 then
-        meteor_shower.skip = meteor_shower.skip - Meteor.tick_skip_meteor_shower
-        return
-    end
-
     meteor_shower.valid = false
     Meteor.spawn_meteor_shower(meteor_shower)
 end
-
 
 function Meteor.on_tick(event)
     -- Process meteor showers like tick tasks
@@ -111,7 +134,6 @@ function Meteor.on_tick(event)
     end
 end
 Event.addListener(defines.events.on_tick, Meteor.on_tick)
-
 
 function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor_count)
     local surface = game.surfaces[surface_index]
@@ -198,5 +220,9 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
         end
     end
 end
+
+commands.add_command("e2", { "" }, function()
+    Meteor.begin_meteor_shower(1, game.player.position, 10, 10)
+end)
 
 return Meteor
