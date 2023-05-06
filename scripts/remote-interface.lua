@@ -26,7 +26,10 @@ remote.add_interface(
                     end
                 end
             end,
-            --/c remote.call("fed1s-event", "begin_earth_quake", {earth_quake_count = 1, surface_index = 1})
+            --/c remote.call("fed1s-event", "begin_earth_quake", {position = {x=1,y=1}, surface_index = 1})
+            --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 6.42, surface_index = 1, biters=true})
+            --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 6.42, surface_index = 1})
+            --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 10, cliffCount=10, surface_index = 1})
             begin_earth_quake = function(data)
                 EarthQuake.earthQuakeEvent(data)
             end

@@ -9,6 +9,7 @@ Util = require('scripts/util')
 util = Util
 Event = require('scripts/events')
 
+BiterSpawn = require('scripts/biter-spawn')
 EarthQuake = require('scripts/events/earth-quake')
 Meteor = require('scripts/events/meteors')
 
