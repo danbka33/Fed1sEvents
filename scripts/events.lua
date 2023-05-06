@@ -16,8 +16,7 @@ Event.addListener = function(event_key, add_callback, virtual)
             end
         end
         if string.find(event_key, "on_nth_tick_", 1, true) then
-            --Util.replace(event_key, "on_nth_tick_", "")
-            local freq = tonumber(1)
+            local freq = tonumber(Util.replace(event_key, "on_nth_tick_", ""))
             script.on_nth_tick(freq, Event.listeners[event_key].sequence)
             table.insert(Event.listeners[event_key].callbacks, add_callback)
         else
