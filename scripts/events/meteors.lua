@@ -39,6 +39,31 @@ function Meteor.choose_shower_position(surface_index)
     return position
 end
 
+
+---Generates a meteor shower alert and optionally prints alert to console.
+---@param meteor_shower MeteorShowerInfo Meteor shower data
+function Meteor.meteor_shower_alert(meteor_shower)
+
+    local surface = game.surfaces[meteor_shower.surface_index]
+    if not surface then
+        return
+    end
+
+    local dummy = surface.create_entity{name = "fed1s-".."dummy-explosion", position = meteor_shower.land_position}
+
+    local message = {"fed1s.meteor_shower_report",
+                     #meteor_shower.meteors,
+                     "[gps="..math.floor(meteor_shower.land_position.x)..","..math.floor(meteor_shower.land_position.y)..","..surface.name.."]",
+    }
+
+    for _, player in pairs(game.connected_players) do
+        if player.surface.index == surface.index then
+            player.add_custom_alert(dummy, {type = "virtual", name = "fed1s-meteor"}, message, true)
+            player.print(message)
+        end
+    end
+end
+
 ---Spawns the actual meteor and shadow sprites.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
 function Meteor.spawn_meteor_shower(meteor_shower)
@@ -56,8 +81,6 @@ function Meteor.spawn_meteor_shower(meteor_shower)
             if surface.is_chunk_generated(util.position_to_chunk_position(meteor.land_position)) then
 
                 local variant = string.format("%02d", math.random(Meteor.meteor_variants))
-
-                game.print("Meteor shower spawned at [gps=" .. meteor.land_position.x .. ", " .. meteor.land_position.y .. "]")
 
                 surface.create_entity {
                     name = "fed1s-falling-meteor-" .. variant,
@@ -213,6 +236,7 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
         skip = 0
     }
     table.insert(global.meteor_showers, meteor_shower)
+    Meteor.meteor_shower_alert(meteor_shower)
 
     for _, player in pairs(game.connected_players) do
         if player.surface.index == surface.index then

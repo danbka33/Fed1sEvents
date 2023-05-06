@@ -1,5 +1,43 @@
 
 data:extend({
+    { -- dummy explosion entity for alerts
+        type = "explosion",
+        name =  "fed1s-" .. "dummy-explosion",
+        animations = {
+            {
+                direction_count = 1,
+                filename = "__Fed1sEvents__/graphics/blank.png",
+                frame_count = 1,
+                height = 1,
+                line_length = 1,
+                width = 1
+            }
+        },
+        flags = {
+            "not-on-map"
+        },
+    },
+    { -- some debris has been added to the surface, in space it should move
+        type = "explosion",
+        name =  "fed1s-" .. "trigger-movable-debris",
+        animations = {
+            {
+                direction_count = 1,
+                filename = "__Fed1sEvents__/graphics/blank.png",
+                frame_count = 1,
+                height = 1,
+                line_length = 1,
+                width = 1
+            }
+        },
+        flags = {
+            "not-on-map"
+        },
+    },
+})
+
+
+data:extend({
     {
         type = "explosion",
         name = "fed1s-".."meteor-explosion",
