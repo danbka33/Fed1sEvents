@@ -39,7 +39,6 @@ function Meteor.choose_shower_position(surface_index)
     return position
 end
 
-
 ---Generates a meteor shower alert and optionally prints alert to console.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
 function Meteor.meteor_shower_alert(meteor_shower)
@@ -49,16 +48,16 @@ function Meteor.meteor_shower_alert(meteor_shower)
         return
     end
 
-    local dummy = surface.create_entity{name = "fed1s-".."dummy-explosion", position = meteor_shower.land_position}
+    local dummy = surface.create_entity { name = "fed1s-" .. "dummy-explosion", position = meteor_shower.land_position }
 
-    local message = {"fed1s.meteor_shower_report",
-                     #meteor_shower.meteors,
-                     "[gps="..math.floor(meteor_shower.land_position.x)..","..math.floor(meteor_shower.land_position.y)..","..surface.name.."]",
+    local message = { "fed1s.meteor_shower_report",
+                      #meteor_shower.meteors,
+                      "[gps=" .. math.floor(meteor_shower.land_position.x) .. "," .. math.floor(meteor_shower.land_position.y) .. "," .. surface.name .. "]",
     }
 
     for _, player in pairs(game.connected_players) do
         if player.surface.index == surface.index then
-            player.add_custom_alert(dummy, {type = "virtual", name = "fed1s-meteor"}, message, true)
+            player.add_custom_alert(dummy, { type = "virtual", name = "fed1s-meteor" }, message, true)
             player.print(message)
         end
     end
@@ -66,7 +65,7 @@ end
 
 ---Spawns the actual meteor and shadow sprites.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
-function Meteor.spawn_meteor_shower(meteor_shower)
+function Meteor.spawn_meteor_shower(meteor_shower, tick)
     local surface = game.surfaces[meteor_shower.surface_index]
 
     if not surface then
@@ -82,20 +81,27 @@ function Meteor.spawn_meteor_shower(meteor_shower)
 
                 local variant = string.format("%02d", math.random(Meteor.meteor_variants))
 
+                local biters = ""
+
+                if meteor_shower.biters then
+                    biters = "biters-"
+                end
+
                 surface.create_entity {
-                    name = "fed1s-falling-meteor-" .. variant,
+                    name = "fed1s-falling-" .. biters .. "meteor-" .. variant,
                     position = meteor_shower.start_position,
                     target = meteor.land_position,
                     force = "neutral",
                     speed = Util.vectors_delta_length(meteor_shower.start_position, meteor.land_position) / (Meteor.meteor_fall_time + Meteor.meteor_chain_delay * meteor.id)
                 }
                 surface.create_entity {
-                    name = "fed1s-shadow-meteor-" .. variant,
+                    name = "fed1s-shadow-" .. biters .. "meteor-" .. variant,
                     position = meteor_shower.shadow_start_position,
                     target = meteor.land_position,
                     force = "neutral",
                     speed = Util.vectors_delta_length(meteor_shower.shadow_start_position, meteor.land_position) / (Meteor.meteor_fall_time + Meteor.meteor_chain_delay * meteor.id)
                 }
+
             end
         end
     end
@@ -105,19 +111,40 @@ end
 ---Handles cargo rocket fragments and meteors being spawned, as well as the creation of biter
 ---spawners on vitamelange worlds.
 ---@param event on_trigger_created_entity Event data
-function on_trigger_created_entity(event)
+local function on_trigger_created_entity(event)
     if not event.entity.valid then
         return
     end
 
     local entity_name = event.entity.name
+    local biter_meteor_name = string.match(entity_name, "biters[-]meteor[-]%d%d")
     local meteor_name = string.match(entity_name, "meteor[-]%d%d")
 
     local surface = event.entity.surface
     local position = event.entity.position
     local tile = surface.get_tile(position)
 
-    if meteor_name then
+    if biter_meteor_name then
+        if not tile.collides_with("player-layer") then
+            -- Create an explosion
+            surface.create_entity { name = "fed1s-" .. "meteor-explosion", position = position }
+
+            local r = math.random()
+            local tick_task = new_tick_task("create-entity")
+
+            tick_task.delay_until = event.tick + 1
+            tick_task.surface = surface
+            tick_task.create_entity_data = { position = position, force = "enemy" }
+
+            if r < 0.1 then
+                tick_task.create_entity_data.name = "behemoth-worm-turret"
+            elseif r < 0.5 then
+                tick_task.create_entity_data.name = "spitter-spawner"
+            else
+                tick_task.create_entity_data.name = "biter-spawner"
+            end
+        end
+    elseif (meteor_name) then
         if not tile.collides_with("player-layer") then
             -- Create an explosion
             surface.create_entity { name = "fed1s-" .. "meteor-explosion", position = position }
@@ -126,7 +153,6 @@ function on_trigger_created_entity(event)
             local meteor_remnant = surface.create_entity {
                 name = "fed1s-" .. "static-" .. meteor_name, position = position, force = "neutral" }
             Util.conditional_mark_for_deconstruction({ meteor_remnant }, surface, position)
-
         end
     end
 end
@@ -134,14 +160,14 @@ Event.addListener(defines.events.on_trigger_created_entity, on_trigger_created_e
 
 ---Processes a given meteor shower, triggering defenses if appropriate.
 ---@param meteor_shower MeteorShowerInfo Meteor shower data
-function Meteor.tick_meteor_shower(meteor_shower)
+function Meteor.tick_meteor_shower(meteor_shower, tick)
     if type(meteor_shower.remaining_meteors) ~= "table" then
         meteor_shower.valid = false
         return
     end
 
     meteor_shower.valid = false
-    Meteor.spawn_meteor_shower(meteor_shower)
+    Meteor.spawn_meteor_shower(meteor_shower, tick)
 end
 
 function Meteor.on_tick(event)
@@ -149,7 +175,7 @@ function Meteor.on_tick(event)
     if global.meteor_showers then
         for i = #global.meteor_showers, 1, -1 do
             if global.meteor_showers[i].valid then
-                Meteor.tick_meteor_shower(global.meteor_showers[i])
+                Meteor.tick_meteor_shower(global.meteor_showers[i], event.tick)
             else
                 table.remove(global.meteor_showers, i)
             end
@@ -158,11 +184,15 @@ function Meteor.on_tick(event)
 end
 Event.addListener(defines.events.on_tick, Meteor.on_tick)
 
-function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor_count)
+function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor_count, biters)
     local surface = game.surfaces[surface_index]
 
     if not surface then
         return
+    end
+
+    if not biters then
+        biters = false
     end
 
     if not position then
@@ -233,6 +263,7 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
         remaining_meteors = table.deepcopy(meteors),
         defences_activated = 0,
         point_defences_activated = 0,
+        biters = biters,
         skip = 0
     }
     table.insert(global.meteor_showers, meteor_shower)
@@ -246,7 +277,7 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
 end
 
 commands.add_command("e2", { "" }, function()
-    Meteor.begin_meteor_shower(1, game.player.position, 10, 10)
+    Meteor.begin_meteor_shower(1, game.player.position, 10, 10, true)
 end)
 
 return Meteor
