@@ -88,9 +88,19 @@ function EarthQuake.earthQuakeEvent(data)
     end
 
     local biters = false;
+    local bitersSpawnRate = 0.1
+    local biterOrSpitterSpawnRate = 0.5
 
     if data.biters then
         biters = true
+    end
+
+    if data.biters_spawn_rate and data.biters_spawn_rate <= 1 and data.biters_spawn_rate >= 0 then
+        bitersSpawnRate = data.biters_spawn_rate
+    end
+
+    if data.biter_or_spitter_spawn_rate and data.biter_or_spitter_spawn_rate <= 1 and data.biter_or_spitter_spawn_rate >= 0 then
+        biterOrSpitterSpawnRate = data.biter_or_spitter_spawn_rate
     end
 
     local chance = math.random()
@@ -99,11 +109,11 @@ function EarthQuake.earthQuakeEvent(data)
 
     -- выбираем магнитуду в зависимости от вероятности
     if chance < 0.8 then
-        magnitude = math.random(1, 5) -- магнитуда от 1 до 6
+        magnitude = math.random(1, 5) -- магнитуда от 1 до 5
     elseif (chance < 0.95) then
-        magnitude = math.random(6, 7) -- магнитуда от 7 до 9
+        magnitude = math.random(6, 7) -- магнитуда от 6 до 7
     else
-        magnitude = math.random(8, 10) -- магнитуда от 7 до 9
+        magnitude = math.random(8, 10) -- магнитуда от 8 до 10
     end
 
     if data.magnitude and data.magnitude > 0 then
@@ -121,8 +131,8 @@ function EarthQuake.earthQuakeEvent(data)
         cliffLength = 3
     end
 
-    if data.cliffCount and data.cliffCount > 0 then
-        count = data.cliffCount
+    if data.cliff_count and data.cliff_count > 0 then
+        count = data.cliff_count
     end
 
     game.print("Магнитуда: " .. magnitude)
@@ -186,12 +196,12 @@ function EarthQuake.earthQuakeEvent(data)
                 ["south"] = bookSouth,
             },
             skipTick = math.floor(2 * 80 / cliffLength + 0.5),
-            biters = biters
+            biters = biters,
+            bitersSpawnRate = bitersSpawnRate,
+            biterOrSpitterSpawnRate = biterOrSpitterSpawnRate,
         }
 
         table.insert(global.earthQuakes, earthQuake)
-
-        --game.print("Эпицентр землетрясения [gps=" .. earthQuake.currentPositionX .. "," .. earthQuake.currentPositionY .. "] ", { 1, 1, 0, 1 })
     end
 end
 
@@ -241,7 +251,7 @@ function EarthQuake.on_nth_tick_1(event)
             local cliff = randomCliff["cliff"]
 
             -- If we reached the end of the cliff, stop it
-            if (earthQuake.currentLength == cliffLength) then
+            if (earthQuake.currentLength + 1 >= cliffLength) then
                 cliff = EarthQuake.cliffSettings[earthQuake.currentCliff]["stopCliff"]
             end
 
@@ -264,37 +274,47 @@ function EarthQuake.on_nth_tick_1(event)
                 end
             end
 
+            local randomPositions = {
+                { x = 0, y = 5 },
+                { x = 0, y = -5 },
+                { x = 5, y = 0 },
+                { x = 5, y = 5 },
+                { x = 5, y = -5 },
+                { x = -5, y = 0 },
+                { x = -5, y = 5 },
+                { x = -5, y = -5 },
+            }
+
             if earthQuake.biters then
-                local biterSpawn = nil
 
-                if math.random() > 0.5 then
-                    biterSpawn = BiterSpawn.get_spitter()
+                local randomPositionIndex = math.random(1, 8)
+                local randomPosition = randomPositions[randomPositionIndex]
+
+                if (math.random() > earthQuake.bitersSpawnRate) then
+
+                    local biterSpawn = nil
+
+                    if math.random() > earthQuake.biterOrSpitterSpawnRate then
+                        biterSpawn = BiterSpawn.get_spitter()
+                    else
+                        biterSpawn = BiterSpawn.get_biter()
+                    end
+
+                    local biterAmount = math.floor(earthQuake.magnitude / 4)
+
+                    for i = 1, biterAmount do
+                        surface.create_entity {
+                            name = biterSpawn,
+                            position = { cliffPosition[1] + randomPosition.x, cliffPosition[2] + randomPosition.y },
+                            force = "enemy",
+                            amount = biterAmount
+                        }
+                    end
                 else
-                    biterSpawn = BiterSpawn.get_biter()
-                end
-
-                local biterAmount = math.floor(earthQuake.magnitude / 4)
-
-                local randomPositions = {
-                    { x = 0, y = 5 },
-                    { x = 0, y = -5 },
-                    { x = 5, y = 0 },
-                    { x = 5, y = 5 },
-                    { x = 5, y = -5 },
-                    { x = -5, y = 0 },
-                    { x = -5, y = 5 },
-                    { x = -5, y = -5 },
-                }
-
-                for i = 1, biterAmount do
-                    local randomPositionIndex = math.random(8)
-                    local randomPosition = randomPositions[randomPositionIndex]
-
                     surface.create_entity {
-                        name = biterSpawn,
+                        name = BiterSpawn.get_turret(),
                         position = { cliffPosition[1] + randomPosition.x, cliffPosition[2] + randomPosition.y },
                         force = "enemy",
-                        amount = biterAmount
                     }
                 end
 
@@ -314,8 +334,8 @@ function EarthQuake.on_nth_tick_1(event)
                 end
             end
 
-            if (earthQuake.currentLength > cliffLength) then
-                game.print(" Землетрясение закончилось. " .. earthQuake.currentLength, { 1, 1, 0, 1 })
+            if (earthQuake.currentLength >= cliffLength) then
+                game.print("Землетрясение закончилось.", { 1, 1, 0, 1 })
                 global.earthQuakes[earthQuakeIndex] = nil
             end
 

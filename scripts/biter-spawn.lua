@@ -84,6 +84,20 @@ function BiterSpawn.getValues(map, evo)
     return result
 end
 
+function BiterSpawn.get_turret()
+   local evo = game.forces["enemy"].evolution_factor;
+
+    if evo > 0.9 then
+        return "behemoth-worm-turret"
+    elseif evo > 0.5 then
+        return "big-worm-turret"
+    elseif evo > 0.2 then
+        return "medium-worm-turret"
+    else
+        return "small-worm-turret"
+    end
+end
+
 function BiterSpawn.get_spitter()
     local values = BiterSpawn.getValues(BiterSpawn.spitterSpawner, game.forces["enemy"].evolution_factor)
     local rand = math.random()

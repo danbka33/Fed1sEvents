@@ -30,6 +30,7 @@ remote.add_interface(
             --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 6.42, surface_index = 1, biters=true})
             --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 6.42, surface_index = 1})
             --/c remote.call("fed1s-event", "begin_earth_quake", {magnitude = 10, cliffCount=10, surface_index = 1})
+            --/c remote.call("fed1s-event", "begin_earth_quake", {biters_spawn_rate=0.9, biter_or_spitter_spawn_rate=0.5, biters=true, magnitude = 10, cliff_сount=10, surface_index = 1})
             begin_earth_quake = function(data)
                 EarthQuake.earthQuakeEvent(data)
             end
