@@ -14,6 +14,7 @@ EarthQuake = require('scripts/events/earth-quake')
 Meteor = require('scripts/events/meteors')
 Raid = require('scripts/events/raid')
 PlayerInFire = require("scripts/events/player-in-fire")
+Pollution = require("scripts/events/pollution")
 
 require("scripts/remote-interface")
 

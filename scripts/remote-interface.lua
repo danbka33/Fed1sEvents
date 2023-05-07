@@ -22,6 +22,11 @@ remote.add_interface(
             begin_earth_quake = function(data)
                 EarthQuake.earthQuakeEvent(data)
             end,
+            --/c remote.call("fed1s-event", "spawn_raid", {surface_index=1})
+            --/c remote.call("fed1s-event", "spawn_raid", {surface_index=1, position={0,0})
+            --/c remote.call("fed1s-event", "spawn_raid", {surface_index=1, position={0,0}, group_amount=30})
+            --/c remote.call("fed1s-event", "spawn_raid", {surface_index=1, group_amount=100})
+            --/c remote.call("fed1s-event", "spawn_raid", {ultimate=true})
             --/c remote.call("fed1s-event", "spawn_raid", {})
             spawn_raid = function(data)
                 Raid.spawn_raid(data)
@@ -33,6 +38,13 @@ remote.add_interface(
             -- /c remote.call("fed1s-event", "player_in_fire", {})
             player_in_fire = function(data)
                 PlayerInFire.player_in_fire(data)
+            end,
+            -- /c remote.call("fed1s-event", "pollute", {})
+            -- /c remote.call("fed1s-event", "pollute", {position={0,0}})
+            -- /c remote.call("fed1s-event", "pollute", {position={0,0}, pollution_amount=100000})
+            -- /c remote.call("fed1s-event", "pollute", {pollution_amount=100000})
+            pollute = function(data)
+                Pollution.pollute(data)
             end
         }
 )

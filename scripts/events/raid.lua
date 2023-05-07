@@ -55,6 +55,12 @@ function Raid.spawn_raid(data)
 
     local surface = game.surfaces[1]
 
+    local ultimate = false
+
+    if data.ultimate then
+        ultimate = data.ultimate
+    end
+
     if data.surface_index then
         surface = game.surfaces[data.surface_index]
         if not surface then
@@ -66,7 +72,9 @@ function Raid.spawn_raid(data)
     if (data.position) then
         position = data.position
     else
-        position = Raid.find_spawn_point(surface, game.forces.player, { x = 0, y = 0 }, 4)
+        while position == nil do
+            position = Raid.find_spawn_point(surface, game.forces.player, { x = 0, y = 0 }, 4)
+        end
         game.print("[gps=" .. position.x .. "," .. position.y .. "]", { 1, 0, 0, 1 })
     end
 
@@ -79,8 +87,21 @@ function Raid.spawn_raid(data)
     end
 
     for i = 1, groupAmount do
+        local enemy = BiterSpawn.get_enemy()
+
+        -- TODO: fix group finish task before found player
+        if ultimate then
+            if math.random() > 0.8 then
+                if math.random() > 0.5 then
+                    enemy = "fed1s-boss-biter-1"
+                else
+                    enemy = "fed1s-boss-acid-spitter-1"
+                end
+            end
+        end
+
         local createdEntity = surface.create_entity {
-            name = BiterSpawn.get_enemy(),
+            name = enemy,
             position = { position.x + math.random(-1, 1), position.y + math.random(-1, 1) },
             force = "enemy"
         }
