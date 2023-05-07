@@ -113,7 +113,7 @@ function BiterSpawn.get_enemy()
 end
 
 function BiterSpawn.get_turret()
-   local evo = game.forces["enemy"].evolution_factor;
+    local evo = game.forces["enemy"].evolution_factor;
 
     if evo > 0.9 then
         return "behemoth-worm-turret"
@@ -169,10 +169,5 @@ function BiterSpawn.get_biter()
 
     return selectedMonster
 end
-
-commands.add_command("e3", { "" }, function()
-    game.print(BiterSpawn.get_biter())
-    game.print(BiterSpawn.get_spitter())
-end)
 
 return BiterSpawn

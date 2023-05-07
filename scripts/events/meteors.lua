@@ -286,8 +286,4 @@ function Meteor.begin_meteor_shower(data)
     end
 end
 
-commands.add_command("e2", { "" }, function()
-    Meteor.begin_meteor_shower({  })
-end)
-
 return Meteor

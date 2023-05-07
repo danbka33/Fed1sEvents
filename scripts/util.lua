@@ -1254,4 +1254,41 @@ function util.has_product(recipe, name)
     return false
 end
 
+function util.chunk_to_area(chunk_pos)
+    chunk_pos = util.position_to_table(chunk_pos)
+
+    local left_top = { x = chunk_pos.x * 32, y = chunk_pos.y * 32 }
+    return { left_top = left_top, right_bottom = util.position_offset(left_top, 32, 32) }
+end
+
+function util.position_offset(pos, x, y)
+    if #pos == 2 then
+        return { x = pos[1] + x, y = pos[2] + y }
+    else
+        return { x = pos.x + x, y = pos.y + y }
+    end
+end
+
+function util.position_to_table(pos_arr)
+    if #pos_arr == 2 then
+        return { x = pos_arr[1], y = pos_arr[2] }
+    end
+    return pos_arr
+end
+
+function util.chunk_from_position(position)
+    position = util.position_to_table(position)
+    local x = math.floor(position.x)
+    local y = math.floor(position.y)
+    local chunk_x = bit32.arshift(x, 5)
+    if x < 0 then
+        chunk_x = chunk_x - MAX_UINT
+    end
+    local chunk_y = bit32.arshift(y, 5)
+    if y < 0 then
+        chunk_y = chunk_y - MAX_UINT
+    end
+    return {x = chunk_x, y = chunk_y}
+end
+
 return util

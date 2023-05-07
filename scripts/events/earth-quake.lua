@@ -141,10 +141,10 @@ function EarthQuake.earthQuakeEvent(data)
 
     for i = 1, count do
 
-        --вектор землетрясения
-        local cliffX = math.random(cliffLength * 2) - cliffLength
-        -- Crash on cliffLength=3 TODO: FIX IT
-        local cliffY = math.random(math.abs(cliffLength - cliffX) * 2) - math.abs((cliffLength - cliffX))
+        local cllfAngle = math.random(628)
+        local cliffX = math.sin(cllfAngle / 100) * cliffLength
+        local cliffY = math.cos(cllfAngle / 100) * cliffLength
+
         --расчёт распределения движения скал
         local fluct = cliffLength / 4
         local bookNorth = fluct
@@ -343,10 +343,6 @@ function EarthQuake.on_nth_tick_1(event)
     end
 end
 Event.addListener("on_nth_tick_1", EarthQuake.on_nth_tick_1)
-
-commands.add_command("e1", { "players-inventory.open-description" }, function()
-    EarthQuake.earthQuakeEvent({ surface_index = 1 })
-end)
 
 return EarthQuake
 
