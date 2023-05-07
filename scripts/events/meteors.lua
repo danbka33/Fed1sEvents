@@ -184,30 +184,40 @@ function Meteor.on_tick(event)
 end
 Event.addListener(defines.events.on_tick, Meteor.on_tick)
 
-function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor_count, biters)
-    local surface = game.surfaces[surface_index]
+function Meteor.begin_meteor_shower(data)
 
-    if not surface then
-        return
+    local surface = game.surfaces[1]
+
+    if data.surface_index then
+        surface = game.surfaces[data.surface_index]
+        if not surface then
+            return
+        end
     end
 
-    if not biters then
-        biters = false
+    local biters = false
+
+    if data.biters then
+        biters = data.biters
     end
 
-    if not position then
-        position = { x = 0, y = 0 }
+    local position = { x = 0, y = 0 }
+
+    if data.target_entity and data.target_entity.valid then
+        position = data.target_entity.position
+    elseif data.position then
+        position = data.position
     end
-    if not range then
-        range = Meteor.meteor_random_range
+
+    local range = math.random(1, Meteor.meteor_random_range)
+
+    if data.range then
+        range = data.range
     end
 
     local meteor_count
-    if force_meteor_count then
-        meteor_count = force_meteor_count
-        if force_meteor_count > 100 then
-            game.print("Meteor shower count capped at 100, use multiple meteor showers to bypass this limit.")
-        end
+    if data.meteor_count then
+        meteor_count = data.meteor_count
     else
         ---50% chance for 1, 25% chance for 2, 12.5% chance for 3, 6.25% chance for 4, etc...
         meteor_count = math.floor(math.log(1 / (1 - math.random()), 2)) + 1
@@ -255,7 +265,7 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
     local meteor_shower = {
         valid = true,
         type = "meteor-shower",
-        surface_index = surface_index,
+        surface_index = surface.index,
         land_position = land_position,
         start_position = start_position,
         shadow_start_position = shadow_start_position,
@@ -277,7 +287,7 @@ function Meteor.begin_meteor_shower(surface_index, position, range, force_meteor
 end
 
 commands.add_command("e2", { "" }, function()
-    Meteor.begin_meteor_shower(1, game.player.position, 10, 10, true)
+    Meteor.begin_meteor_shower({  })
 end)
 
 return Meteor
