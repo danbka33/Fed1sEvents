@@ -84,6 +84,34 @@ function BiterSpawn.getValues(map, evo)
     return result
 end
 
+function BiterSpawn.get_spawner()
+    local evo = game.forces["enemy"].evolution_factor;
+
+    if evo > 0.25 then
+        if math.random() > 0.5 then
+            return "biter-spawner"
+        else
+            return "spitter-spawner"
+        end
+    end
+
+    return "biter-spawner"
+end
+
+function BiterSpawn.get_enemy()
+    local evo = game.forces["enemy"].evolution_factor;
+
+    if evo > 0.25 then
+        if math.random() > 0.5 then
+            return BiterSpawn.get_biter()
+        else
+            return BiterSpawn.get_spitter()
+        end
+    end
+
+    return BiterSpawn.get_biter()
+end
+
 function BiterSpawn.get_turret()
    local evo = game.forces["enemy"].evolution_factor;
 

@@ -136,12 +136,12 @@ local function on_trigger_created_entity(event)
             tick_task.surface = surface
             tick_task.create_entity_data = { position = position, force = "enemy" }
 
-            if r < 0.1 then
-                tick_task.create_entity_data.name = "behemoth-worm-turret"
-            elseif r < 0.5 then
-                tick_task.create_entity_data.name = "spitter-spawner"
+            if r > 0.9 then
+                tick_task.create_entity_data.name = BiterSpawn.get_spawner()
+            elseif r > 0.5 then
+                tick_task.create_entity_data.name = BiterSpawn.get_turret()
             else
-                tick_task.create_entity_data.name = "biter-spawner"
+                tick_task.create_entity_data.name = BiterSpawn.get_enemy()
             end
         end
     elseif (meteor_name) then
