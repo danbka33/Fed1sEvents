@@ -45,6 +45,25 @@ remote.add_interface(
             -- /c remote.call("fed1s-event", "pollute", {pollution_amount=100000})
             pollute = function(data)
                 Pollution.pollute(data)
+            end,
+            -- /c remote.call("fed1s-event", "research_current_technology", {})
+            research_current_technology = function(data)
+                local force = game.forces.player
+
+                if force then
+                    local currentResearch = force.current_research;
+
+                    if currentResearch then
+
+                        --force.add_research(currentResearch.name)
+
+                        force.research_progress = 1.0
+
+                        game.print("Боги даровали вам знания! Была изучена [technology=" .. currentResearch.name .. "].", { 1, 1, 0, 1 })
+                    end
+                end
+
+
             end
         }
 )
