@@ -81,21 +81,23 @@ function Meteor.spawn_meteor_shower(meteor_shower, tick)
 
                 local variant = string.format("%02d", math.random(Meteor.meteor_variants))
 
-                local biters = ""
+                local meteorType = ""
 
-                if meteor_shower.biters then
-                    biters = "biters-"
+                if meteor_shower.electric then
+                    meteorType = "electric-"
+                elseif meteor_shower.biters then
+                    meteorType = "biters-"
                 end
 
                 surface.create_entity {
-                    name = "fed1s-falling-" .. biters .. "meteor-" .. variant,
+                    name = "fed1s-falling-" .. meteorType .. "meteor-" .. variant,
                     position = meteor_shower.start_position,
                     target = meteor.land_position,
                     force = "neutral",
                     speed = Util.vectors_delta_length(meteor_shower.start_position, meteor.land_position) / (Meteor.meteor_fall_time + Meteor.meteor_chain_delay * meteor.id)
                 }
                 surface.create_entity {
-                    name = "fed1s-shadow-" .. biters .. "meteor-" .. variant,
+                    name = "fed1s-shadow-meteor-" .. variant,
                     position = meteor_shower.shadow_start_position,
                     target = meteor.land_position,
                     force = "neutral",
@@ -117,14 +119,43 @@ local function on_trigger_created_entity(event)
     end
 
     local entity_name = event.entity.name
+    game.print(entity_name)
+    local electric_meteor_name = string.match(entity_name, "electric[-]meteor[-]%d%d")
     local biter_meteor_name = string.match(entity_name, "biters[-]meteor[-]%d%d")
     local meteor_name = string.match(entity_name, "meteor[-]%d%d")
+
+    game.print(electric_meteor_name)
+    game.print(biter_meteor_name)
+    game.print(meteor_name)
 
     local surface = event.entity.surface
     local position = event.entity.position
     local tile = surface.get_tile(position)
 
-    if biter_meteor_name then
+    if electric_meteor_name then
+        if not tile.collides_with("player-layer") then
+            -- Decide whether to spawn biter meteors or meteor fragments
+            surface.create_entity { name = "electric-shock2", position = position }
+
+            local meteor_remnant = surface.create_entity {
+                name = "fed1s-" .. "static-electric-" .. meteor_name,
+                position = position,
+                force = "player"
+            }
+
+            local foundEntities = surface.find_entities_filtered {
+                name = { meteor_remnant.name, "electric-shock2" },
+                invert = true,
+                area = meteor_remnant.bounding_box
+            }
+
+            for _, foundEntity in pairs(foundEntities) do
+                util.safe_destroy(foundEntity)
+            end
+
+            --Util.conditional_mark_for_deconstruction({ meteor_remnant }, surface, position)
+        end
+    elseif biter_meteor_name then
         if not tile.collides_with("player-layer") then
             -- Create an explosion
             surface.create_entity { name = "fed1s-" .. "meteor-explosion", position = position }
@@ -201,6 +232,11 @@ function Meteor.begin_meteor_shower(data)
         biters = data.biters
     end
 
+    local electric = false
+    if data.electric then
+        electric = data.electric
+    end
+
     local position = { x = 0, y = 0 }
 
     if data.target_entity and data.target_entity.valid then
@@ -274,6 +310,7 @@ function Meteor.begin_meteor_shower(data)
         defences_activated = 0,
         point_defences_activated = 0,
         biters = biters,
+        electric = electric,
         skip = 0
     }
     table.insert(global.meteor_showers, meteor_shower)

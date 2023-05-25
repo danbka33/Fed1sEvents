@@ -180,6 +180,111 @@ local fire_tint = { r = 1.0, g = 0.3, b = 0.1, a = 1.000 }
 local boss_scale = 3.5
 
 data:extend({
+
+    {
+        type = "explosion",
+        name = "electric-shock2",
+        flags = { "not-on-map" },
+
+        animations = {
+            {
+                scale = 3,
+                axially_symmetrical = false,
+                direction_count = 1,
+                filename = "__Fed1sEvents__/graphics/explosion/electroshock-pulse-explosion.png",
+                animation_speed = 1,
+                frame_count = 7 * 5,
+                line_length = 5,
+                width = 1675 / 5,
+                height = 2044 / 7,
+                priority = "extra-high",
+                hr_version = {
+                    scale = 1.5,
+                    axially_symmetrical = false,
+                    direction_count = 1,
+                    filename = "__Fed1sEvents__/graphics/explosion/hr-electroshock-pulse-explosion.png",
+                    animation_speed = 1,
+                    frame_count = 7 * 5,
+                    line_length = 5,
+                    width = 3350 / 5,
+                    height = 4088 / 7,
+                    priority = "extra-high",
+                }
+            }
+        },
+        flags = {
+            "not-on-map"
+        },
+        light = {
+            intensity = 1,
+            size = 25,
+            color = {
+                a = 1,
+                b = 1,
+                g = 0.3,
+                r = 0.1
+            },
+        },
+        sound = {
+            aggregation = {
+                max_count = 1,
+                remove = true
+            },
+            variations = {
+                {
+                    filename = "__Fed1sEvents__/sound/electroshock-pulse-explosion.ogg",
+                    volume = 1
+                }
+            }
+        },
+
+        created_effect = {
+            type = "area",
+            radius = 13,
+            --entity_flags = {"breaths-air","placeable-neutral","player-creation"},
+            action_delivery = {
+                type = "instant",
+                target_effects = {
+                    {
+                        type = "create-sticker",
+                        sticker = "electroshock-pulse-sticker",
+                    },
+                    {
+                        type = "damage",
+                        damage = { amount = 10, type = "laser" }
+                    }
+                }
+            }
+
+        }
+    },
+    {
+        type = "sticker",
+        name = "electroshock-pulse-sticker",
+        animation = {
+            scale = 1,
+            filename = "__Fed1sEvents__/graphics/explosion/electroshock-pulse-sticker.png",
+            animation_speed = 3.14,
+            frame_count = 16 * 6,
+            line_length = 16,
+            width = 800 / 16,
+            height = 240 / 6,
+            -- priority = "extra-high",
+            hr_version = {
+                scale = 0.5,
+                filename = "__Fed1sEvents__/graphics/explosion/hr-electroshock-pulse-sticker.png",
+                animation_speed = 3.14,
+                frame_count = 16 * 6,
+                line_length = 16,
+                width = 1600 / 16,
+                height = 480 / 6,
+            }
+        },
+        duration_in_ticks = 60 * 5, --75
+        --flags ={"not-on-map"},
+        target_movement_modifier = 0.25,
+    },
+    
     acid_stream({
         name = "bm-acid-stream",
         scale = boss_scale - 1,

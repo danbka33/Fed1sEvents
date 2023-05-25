@@ -250,9 +250,176 @@ local function createMeteor(name, entityName, meteor)
     })
 end
 
+local function createElectricMeteor(i, name, entityName, meteor)
+    local width = meteor[1]
+    local height = meteor[2]
+    local shadow_width = meteor[1]
+    local shadow_height = meteor[2]
+    local scale = 0.75
+    local picture_offset = width / 32 / 16
+    data:extend({
+        { -- Triggers
+            type = "explosion",
+            name = 'fed1s-' .. "trigger-movable-" .. entityName .. "-debris",
+            animations = {
+                {
+                    direction_count = 1,
+                    filename = "__Fed1sEvents__/graphics/blank.png",
+                    frame_count = 1,
+                    height = 1,
+                    line_length = 1,
+                    width = 1
+                }
+            },
+            flags = {
+                "not-on-map"
+            },
+        },
+        { -- Falling meteor projectiles
+            type = "projectile",
+            name = 'fed1s-' .. "falling-" .. entityName,
+            acceleration = 0,
+            rotatable = false,
+            animation = {
+                filename = "__Fed1sEvents__/graphics/entity/meteor/hr-" .. name .. ".png",
+                frame_count = 1,
+                width = width,
+                height = height,
+                line_length = 1,
+                priority = "high",
+                shift = { picture_offset, 0 },
+                tint = tint,
+                scale = scale,
+            },
+            action = {
+                action_delivery = {
+                    target_effects = {
+                        {
+                            type = "create-entity",
+                            entity_name = 'fed1s-' .. "trigger-movable-" .. entityName .. "-debris",
+                            trigger_created_entity = true,
+                        },
+                    },
+                    type = "instant"
+                },
+                type = "direct"
+            },
+            flags = { "not-on-map" },
+            light = { intensity = 1, size = 5, color = { r = 1, g = 0.7, b = 0.3 } },
+            smoke = {
+                {
+                    deviation = {
+                        0.15,
+                        0.15
+                    },
+                    frequency = 1,
+                    --name = "smoke-fast",
+                    --name = "smoke-explosion-particle",
+                    name = "soft-fire-smoke", -- lasts longer
+                    position = { 0, 0 },
+                    slow_down_factor = 1,
+                    starting_frame = 3,
+                    starting_frame_deviation = 5,
+                    starting_frame_speed = 0,
+                    starting_frame_speed_deviation = 5
+                }
+            },
+        },
+        { -- Electro Meteor remnants
+            type = "lamp",
+            name = 'fed1s-' .. "static-" .. entityName,
+            icon = "__Fed1sEvents__/graphics/icons/asteroid-belt.png",
+            icon_size = 64,
+            flags = { "placeable-neutral", "placeable-off-grid", "not-on-map" },
+            subgroup = "wrecks",
+            order = "d[remnants]-d[ship-wreck]-c[small]-a",
+            always_on = true,
+            max_health = 1000,
+            energy_source = {
+                type = "electric",
+                usage_priority = "primary-input"
+            },
+            energy_usage_per_tick = (i * 10) .. "MW",
+            render_no_network_icon = false,
+            render_no_power_icon = false,
+            alert_icon_scale = 0, -- Hide the alert icon
+            minable = {
+                mining_time = 1,
+                results = {
+                    { name = "stone", amount_min = 9, amount_max = 31 },
+                    { name = "iron-ore", amount_min = 0, amount_max = 30 },
+                    { name = "copper-ore", amount_min = 0, amount_max = 30 },
+                    { name = "uranium-ore", amount_min = 0, amount_max = 30, probability = 0.1 },
+                }
+            },
+            resistances = {
+                { type = "fire", percent = 100 },
+                { type = "poison", percent = 100 }
+            },
+            collision_box = { { -1, -1 }, { 1, 1 } },
+            collision_mask = {}, -- otherwise it kills the entity ghosts too
+            selection_box = { { -1, -1 }, { 1, 1 } },
+            selection_priority = 2,
+            count_as_rock_for_filtered_deconstruction = true,
+            picture_off = {
+                layers = {
+                    {
+                        direction_count = 1,
+                        filename = "__Fed1sEvents__/graphics/entity/meteor/hr-" .. name .. ".png",
+                        width = width,
+                        height = height,
+                        shift = { picture_offset, 0 },
+                        tint = tint,
+                        scale = scale,
+                    },
+                    {
+                        direction_count = 1,
+                        draw_as_shadow = true,
+                        filename = "__Fed1sEvents__/graphics/entity/meteor/shadows/hr-" .. name .. ".png",
+                        width = shadow_width,
+                        height = shadow_height,
+                        shift = { picture_offset, 0 },
+                        tint = tint,
+                        scale = scale,
+                    }
+                }
+            },
+            picture_on = {
+                layers = {
+                    {
+                        direction_count = 1,
+                        filename = "__Fed1sEvents__/graphics/entity/meteor/hr-" .. name .. ".png",
+                        width = width,
+                        height = height,
+                        shift = { picture_offset, 0 },
+                        tint = tint,
+                        scale = scale,
+                    },
+                    {
+                        direction_count = 1,
+                        draw_as_shadow = true,
+                        filename = "__Fed1sEvents__/graphics/entity/meteor/shadows/hr-" .. name .. ".png",
+                        width = shadow_width,
+                        height = shadow_height,
+                        shift = { picture_offset, 0 },
+                        tint = tint,
+                        scale = scale,
+                    }
+                }
+            },
+            render_layer = "object",
+            localised_name = { "entity-name.meteorite" }
+        }
+    })
+
+end
+
+local i = 0
 for name, meteor in pairs(meteors) do
+    i = i + 1
     createMeteor(name, name, meteor)
     createMeteor(name, "biters-" .. name, meteor)
+    createElectricMeteor(i, name, "electric-" .. name, meteor)
 end
 
 data:extend({

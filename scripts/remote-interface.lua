@@ -11,6 +11,8 @@ remote.add_interface(
             --/c remote.call("fed1s-event", "begin_meteor_shower", {target_entity = game.player, meteor_count = 10, range=1, biters=false})
             --/c remote.call("fed1s-event", "begin_meteor_shower", {surface_index = "1", position = {x=0,y=0}, range = 1, meteor_count = 100})
             --/c remote.call("fed1s-event", "begin_meteor_shower", {target_entity = game.player, meteor_count = 100})
+            --/c remote.call("fed1s-event", "begin_meteor_shower", {target_entity = game.player, meteor_count = 100, electric = true})
+            --/c remote.call("fed1s-event", "begin_meteor_shower", {target_entity = game.player, meteor_count = 1, electric = true})
             begin_meteor_shower = function(data)
                 Meteor.begin_meteor_shower(data)
             end,
