@@ -15,6 +15,7 @@ Meteor = require('scripts/events/meteors')
 Raid = require('scripts/events/raid')
 PlayerInFire = require("scripts/events/player-in-fire")
 Pollution = require("scripts/events/pollution")
+ArtilleryWorm = require("scripts/events/artillery-worm")
 
 require("scripts/remote-interface")
 
