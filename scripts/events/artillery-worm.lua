@@ -1,4 +1,4 @@
---[[ Copyright (c) 2023 danbka33
+ï»¿--[[ Copyright (c) 2023 Firinor
  * Part of Fed1sEvent
  *
  * See LICENSE.md in the project directory for license information.
@@ -7,18 +7,41 @@
 local ArtilleryWorm = {}
 
 function ArtilleryWorm.GenerateNew(data)
-	local surface = game.player.surface
-	local entities = surface.find_entities_filtered{force = "enemy", type = 'turret'}
-	if #entities <= 0 then
-		game.print("Íà êàðòå íå îáíàðóæåíî ÷åðâåé. Ïîÿâëåíèå ÷åâðÿ áîìáàðäèðà íå âîçìîæíî!")
+	local private = {evolveNew = 
+	function()
+		local surface = game.player.surface
+		local entities = surface.find_entities_filtered{force = "enemy", type = 'turret'}
+		if #entities <= 0 then
+			game.print("ÐÐ° ÐºÐ°Ñ€Ñ‚Ðµ Ð½Ðµ Ð¾Ð±Ð½Ð°Ñ€ÑƒÐ¶ÐµÐ½Ð¾ Ñ‡ÐµÑ€Ð²ÐµÐ¹. ÐŸÐ¾ÑÐ²Ð»ÐµÐ½Ð¸Ðµ Ñ‡ÐµÐ²Ñ€Ñ Ð±Ð¾Ð¼Ð±Ð°Ñ€Ð´Ð¸Ñ€Ð° Ð½Ðµ Ð²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾!")
+			do return end
+		end
+		--game.print(#entities .." Ñ‡ÐµÑ€Ð²ÐµÐ¹ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ð±Ð½Ð°Ñ€ÑƒÐ¶Ð¸Ñ‚ÑŒ")
+		local i = math.random(#entities)
+		local position = entities[i].position
+		entities[i].destroy()
+		surface.create_entity{name = 'artillery-worm-turret', position = position}
+		game.print("ÐžÐ´Ð¸Ð½ Ð¸Ð· Ñ‡ÐµÑ€Ð²ÐµÐ¹ Ð¿Ñ€ÐµÐ²Ñ€Ð°Ñ‚Ð¸Ð»ÑÑ Ð² Ð±Ð¾Ð¼Ð±Ð°Ñ€Ð´Ð¸Ñ€Ð°!")
+	end,
+	spawnToPoint = 
+	function(position)
+		local surface = game.player.surface
+		surface.create_entity{name = 'artillery-worm-turret', position = position}
+		game.print("ÐŸÐ¾Ñ…Ð¾Ð¶Ðµ Ð¿Ð¾ÑÐ²Ð¸Ð»ÑÑ Ð½Ð¾Ð²Ñ‹Ð¹ Ñ‡ÐµÑ€Ð²ÑŒ Ð±Ð¾Ð¼Ð±Ð°Ñ€Ð´Ð¸Ñ€!")
+	end}
+
+	--local profiler = game.create_profiler()
+
+	if data.isSpawnToPoint then
+		private.spawnToPoint(data.position)
+		--profiler.stop()
+		--game.print(profiler)
 		do return end
 	end
-	--game.print(#entities) ñêîëüêî âñåãî ÷åðâåé óäàëîñü îáíàðóæèòü
-	local i = math.random(#entities)
-	local position = entities[i].position
-	entities[i].destroy()
-	surface.create_entity{name = 'artillery-worm-turret', position = position}
-	game.print("Îäèí èç ÷åðâåé ïðåâðàòèëñÿ â áîìáàðäèðà!")
+
+	private.evolveNew()
+
+	--profiler.stop()
+	--game.print(profiler)
 end
 
 return ArtilleryWorm

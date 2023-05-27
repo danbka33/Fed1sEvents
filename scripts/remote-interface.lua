@@ -49,6 +49,7 @@ remote.add_interface(
                 Pollution.pollute(data)
             end,
             -- /c remote.call("fed1s-event", "spawn_artillery_worm", {})
+            -- /c remote.call("fed1s-event", "spawn_artillery_worm", {isSpawnToPoint = true, position={0,0}})
             spawn_artillery_worm = function(data)
                 ArtilleryWorm.GenerateNew(data)
             end,

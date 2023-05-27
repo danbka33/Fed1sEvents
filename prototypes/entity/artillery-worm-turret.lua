@@ -6,7 +6,6 @@ artilleryWormTurret.prepare_range = 135 --behemoth-worm-turret 84
 artilleryWormTurret.max_health = 150 --behemoth-worm-turret 750
 artilleryWormTurret.resistances = {}
 
-
 data:extend({
     artilleryWormTurret
     })
