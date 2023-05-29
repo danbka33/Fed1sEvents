@@ -48,6 +48,11 @@ remote.add_interface(
             pollute = function(data)
                 Pollution.pollute(data)
             end,
+            -- /c remote.call("fed1s-event", "spawn_artillery_worm", {})
+            -- /c remote.call("fed1s-event", "spawn_artillery_worm", {isSpawnToPoint = true, position={0,0}})
+            spawn_artillery_worm = function(data)
+                ArtilleryWorm.GenerateNew(data)
+            end,
             -- /c remote.call("fed1s-event", "research_current_technology", {})
             research_current_technology = function(data)
                 local force = game.forces.player
